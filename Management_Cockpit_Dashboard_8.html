@@ -1,0 +1,796 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Management Cockpit — DAW / Daleel IN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F1E9; --paper:#FBFAF6; --card:#FFFFFF;
+    --ink:#1F3A5F; --ink2:#2E5077; --muted:#6B7280; --faint:#9AA3AF;
+    --gold:#B8902F; --gold-soft:#E7DCBE;
+    --green:#2E7D52; --green-bg:#E3F0E8;
+    --amber:#C98700; --amber-bg:#FAEFD2;
+    --red:#BC3B2C; --red-bg:#F7DDD8;
+    --line:#E7E1D4; --line2:#EEE9DD;
+    --shadow:0 1px 2px rgba(31,58,95,.04),0 8px 28px rgba(31,58,95,.07);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:'Hanken Grotesk',sans-serif;-webkit-font-smoothing:antialiased}
+  body{padding:0 18px 60px}
+  body[dir="rtl"]{font-family:'IBM Plex Sans Arabic',sans-serif}
+  .wrap{max-width:1080px;margin:0 auto}
+
+  /* header */
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;
+    padding:30px 0 22px;border-bottom:2px solid var(--ink);flex-wrap:wrap}
+  .brandline{font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:6px}
+  h1{font-family:'Fraunces',serif;font-weight:600;font-size:2.05rem;line-height:1.02;letter-spacing:-.01em}
+  .asof{font-size:.82rem;color:var(--muted);margin-top:8px}
+  .asof b{color:var(--ink2);font-weight:600}
+  .toggle{display:flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden;font-weight:700;font-size:.78rem;height:fit-content}
+  .toggle button{border:0;background:transparent;color:var(--ink);padding:7px 15px;cursor:pointer;font:inherit;letter-spacing:.03em}
+  .toggle button.on{background:var(--ink);color:#fff}
+
+  /* section */
+  section{margin-top:34px}
+  .shead{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+  .shead h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.18rem;letter-spacing:-.01em}
+  .shead .rule{flex:1;height:1px;background:var(--line)}
+  .shead .meta{font-size:.74rem;color:var(--faint);letter-spacing:.04em;text-transform:uppercase;font-weight:600}
+
+  /* KPI tiles */
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 17px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .tile .cap{font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .tile .val{font-family:'Fraunces',serif;font-weight:600;font-size:1.85rem;line-height:1;margin-top:11px;color:var(--ink)}
+  .tile .sub{font-size:.74rem;color:var(--faint);margin-top:7px}
+  .tile.accent::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--gold)}
+  body[dir="rtl"] .tile.accent::before{inset:0 0 0 auto;width:4px}
+  .tile .val.pos{color:var(--red)} .tile .val.neg{color:var(--green)}
+
+  /* generic card + table */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:.86rem}
+  thead th{background:#FAF8F2;text-align:start;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);font-weight:700;padding:11px 14px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+  thead th .ar{cursor:pointer}
+  tbody td{padding:11px 14px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#FCFBF7}
+  .num{font-variant-numeric:tabular-nums;text-align:end;white-space:nowrap}
+  .strong{font-weight:700;color:var(--ink)}
+  .totrow td{background:#F6F3EC;font-weight:700;color:var(--ink);border-top:1.5px solid var(--ink)}
+
+  /* pills */
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:700;
+    padding:3px 10px;border-radius:999px;white-space:nowrap;letter-spacing:.01em}
+  .pill .dot{width:7px;height:7px;border-radius:50%}
+  .g{background:var(--green-bg);color:var(--green)} .g .dot{background:var(--green)}
+  .a{background:var(--amber-bg);color:var(--amber)} .a .dot{background:var(--amber)}
+  .r{background:var(--red-bg);color:var(--red)} .r .dot{background:var(--red)}
+  .x{background:var(--red);color:#fff} .x .dot{background:#fff}
+
+  /* progress */
+  .prog{height:7px;border-radius:999px;background:var(--line);overflow:hidden;min-width:64px}
+  .prog>span{display:block;height:100%;background:var(--ink2);border-radius:999px}
+
+  /* expense bars */
+  .ebar{display:grid;grid-template-columns:1fr;gap:13px;padding:18px}
+  .erow{display:grid;grid-template-columns:1.4fr 2.4fr auto;gap:14px;align-items:center}
+  .erow .lbl{font-weight:600;font-size:.85rem}
+  .erow .lbl small{display:block;color:var(--faint);font-weight:500;font-size:.7rem;margin-top:1px}
+  .track{position:relative;height:22px;background:#F1EEE5;border-radius:6px;overflow:hidden}
+  .track .budget{position:absolute;top:0;bottom:0;left:0;border-right:2px dashed var(--ink2);opacity:.5}
+  body[dir="rtl"] .track .budget{left:auto;right:0;border-right:0;border-left:2px dashed var(--ink2)}
+  .track .actual{position:absolute;top:0;bottom:0;left:0;border-radius:6px;background:linear-gradient(90deg,var(--ink2),var(--ink))}
+  body[dir="rtl"] .track .actual{left:auto;right:0}
+  .track .actual.over{background:linear-gradient(90deg,#D9684F,var(--red))}
+  .erow .amt{font-variant-numeric:tabular-nums;text-align:end;font-size:.8rem;color:var(--muted);min-width:120px}
+  .erow .amt b{color:var(--ink);font-weight:700}
+
+  /* decisions */
+  .dgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .dcard{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:12px;padding:15px 16px;box-shadow:var(--shadow)}
+  body[dir="rtl"] .dcard{border-left:1px solid var(--line);border-right:4px solid var(--amber)}
+  .dcard .dq{font-weight:600;font-size:.95rem;line-height:1.25;margin-bottom:9px}
+  .dcard .dmeta{font-size:.76rem;color:var(--muted);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  .dcard .dmeta b{color:var(--ink2)}
+
+  footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:.74rem;color:var(--faint);line-height:1.6}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+
+  .dl{display:inline-flex;align-items:center;gap:5px;font-size:.74rem;font-weight:700;padding:4px 11px;border-radius:8px;text-decoration:none;background:var(--ink);color:#fff;border:1px solid var(--ink);white-space:nowrap}
+  .dl:hover{background:var(--ink2)}
+  .dl.off{background:transparent;color:var(--faint);border:1px dashed var(--line);cursor:not-allowed}
+  .okf{color:var(--green);font-weight:600;font-size:.78rem}
+  .miss{color:var(--red);font-weight:700;font-size:.78rem}
+  .alert{background:var(--red-bg);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:10px;padding:13px 16px;font-size:.9rem;line-height:1.5;color:#7a2218}
+  body[dir="rtl"] .alert{border-left:1px solid var(--red);border-right:4px solid var(--red)}
+  .alert b{color:var(--red)}
+  .tile.clickable{cursor:pointer;transition:transform .12s,box-shadow .12s}
+  .tile.clickable:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(31,58,95,.14)}
+  .fcdetail{margin-top:12px}
+  .fcdetail.open .fcd-inner{animation:fcfade .25s ease}
+  .fcd-inner{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:14px 18px;box-shadow:var(--shadow);max-width:460px}
+  body[dir="rtl"] .fcd-inner{border-left:1px solid var(--line);border-right:4px solid var(--gold)}
+  .fcd-head{font-weight:700;font-size:.9rem;color:var(--ink);margin-bottom:8px}
+  .fcdhint{font-size:.8rem;color:var(--faint);font-style:italic;padding:4px 2px}
+  .fcbar{transition:opacity .12s} .fcbar:hover{opacity:.82}
+  @keyframes fcfade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .reqdetail{max-height:0;overflow:hidden;transition:max-height .28s ease;margin-top:0}
+  .reqdetail.open{max-height:320px;margin-top:14px}
+  .reqdetail-inner{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:14px 18px;box-shadow:var(--shadow);max-width:420px}
+  body[dir="rtl"] .reqdetail-inner{border-left:1px solid var(--line);border-right:4px solid var(--gold)}
+  .reqdetail-head{font-weight:700;font-size:.82rem;color:var(--ink);margin-bottom:8px;letter-spacing:.02em}
+  .reqtbl{width:100%;border-collapse:collapse;font-size:.9rem}
+  .reqtbl td{padding:7px 4px;border-bottom:1px solid var(--line2)}
+  .reqtbl .num{text-align:end;font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink)}
+  .reqtbl .reqtot td{border-top:1.5px solid var(--ink);border-bottom:0;font-weight:700;color:var(--ink);padding-top:9px}
+  .modebadge{display:inline-block;margin-top:9px;font-size:.7rem;font-weight:700;letter-spacing:.04em;padding:3px 10px;border-radius:999px}
+  .modebadge.live{background:var(--green-bg);color:var(--green)}
+  .modebadge.sample{background:var(--amber-bg);color:var(--amber)}
+
+  @media(max-width:760px){
+    .tiles{grid-template-columns:repeat(2,1fr)}
+    .dgrid{grid-template-columns:1fr}
+    h1{font-size:1.6rem}
+    .erow{grid-template-columns:1fr;gap:5px}
+    .erow .amt{text-align:start}
+    .scroll{overflow-x:auto}
+  }
+</style>
+
+<div id="gate" style="position:fixed;inset:0;background:#F4F1E9;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Hanken Grotesk',sans-serif">
+  <div style="background:#fff;border:1px solid #E7E1D4;border-radius:16px;padding:36px 40px;box-shadow:0 10px 40px rgba(31,58,95,.12);width:340px;text-align:center">
+    <div style="font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:#B8902F;font-weight:700;margin-bottom:8px">DAW · Daleel IN</div>
+    <div style="font-family:'Fraunces',serif;font-size:1.4rem;color:#1F3A5F;font-weight:600;margin-bottom:4px">Management Cockpit</div>
+    <div style="font-size:.85rem;color:#6B7280;margin-bottom:20px">Enter access password</div>
+    <input id="gatePw" type="password" placeholder="Password" autocomplete="current-password"
+      style="width:100%;padding:11px 14px;border:1px solid #E7E1D4;border-radius:9px;font-size:1rem;outline:none;margin-bottom:12px;box-sizing:border-box"
+      onkeydown="if(event.key==='Enter')checkGate()">
+    <button onclick="checkGate()" style="width:100%;padding:11px;background:#1F3A5F;color:#fff;border:0;border-radius:9px;font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit">Open Dashboard</button>
+    <div id="gateErr" style="color:#BC3B2C;font-size:.8rem;margin-top:10px;height:1em"></div>
+  </div>
+</div>
+<script>
+  // Access password — change this value to set your own.
+  const ACCESS_PW = "daleel2026";
+  function checkGate(){
+    const v=document.getElementById('gatePw').value;
+    if(v===ACCESS_PW){ document.getElementById('gate').style.display='none'; }
+    else{ document.getElementById('gateErr').textContent='Incorrect password'; }
+  }
+</script>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="brandline" id="brand">DAW · Daleel IN</div>
+      <h1 id="title">Management Cockpit</h1>
+      <div class="asof" id="asof"></div>
+    </div>
+    <div class="toggle">
+      <button id="enBtn" class="on" onclick="setLang('en')">EN</button>
+      <button id="arBtn" onclick="setLang('ar')">عربي</button>
+    </div>
+  </header>
+
+  <section>
+    <div class="tiles" id="kpis"></div>
+    <div id="reqDetail" class="reqdetail"></div>
+  </section>
+
+  <section id="cashSec">
+    <div class="shead"><h2 id="cashH"></h2><div class="rule"></div><div class="meta" id="cashMeta"></div></div>
+    <div class="card scroll"><table id="cashTbl"></table></div>
+  </section>
+
+  <section id="walletSec">
+    <div class="shead"><h2 id="walletH"></h2><div class="rule"></div><div class="meta" id="walletMeta"></div></div>
+    <div class="tiles" id="walletTiles"></div>
+  </section>
+
+  <section id="loanSec">
+    <div class="shead"><h2 id="loanH"></h2><div class="rule"></div><div class="meta" id="loanMeta"></div></div>
+    <div class="tiles" id="loanTiles"></div>
+    <div class="card scroll" style="margin-top:12px"><table id="loanTbl"></table></div>
+  </section>
+
+  <section id="fccSec">
+    <div class="shead"><h2 id="fccH"></h2><div class="rule"></div><div class="meta" id="fccMeta"></div></div>
+    <div class="card scroll"><table id="fccTbl"></table></div>
+  </section>
+
+  <section id="trendSec">
+    <div class="shead"><h2 id="trendH"></h2><div class="rule"></div><div class="meta" id="trendMeta"></div></div>
+    <div class="card" style="padding:18px"><svg id="trendSvg" viewBox="0 0 720 200" style="width:100%;height:auto"></svg></div>
+  </section>
+
+  <section id="expSec">
+    <div class="shead"><h2 id="expH"></h2><div class="rule"></div><div class="meta" id="expMeta"></div></div>
+    <div class="card"><div class="ebar" id="expBars"></div></div>
+  </section>
+
+  <section id="ledgerSec">
+    <div class="shead"><h2 id="ledgerH"></h2><div class="rule"></div><div class="meta" id="ledgerMeta"></div></div>
+    <div class="card scroll"><table id="ledgerTbl"></table></div>
+  </section>
+
+  <section id="apSec">
+    <div class="shead"><h2 id="apH"></h2><div class="rule"></div><div class="meta" id="apMeta"></div></div>
+    <div class="card scroll"><table id="apTbl"></table></div>
+  </section>
+
+  <section id="fcSec">
+    <div class="shead"><h2 id="fcH"></h2><div class="rule"></div><div class="meta" id="fcMeta"></div></div>
+    <div id="fcAlert"></div>
+    <div class="card" style="padding:18px;margin-top:12px"><svg id="fcSvg" viewBox="0 0 720 220" style="width:100%;height:auto"></svg></div>
+    <div id="fcMonthDetail" class="fcdetail"></div>
+    <div class="card scroll" style="margin-top:12px"><table id="fcCatTbl"></table></div>
+  </section>
+
+  <section id="iniSec">
+    <div class="shead"><h2 id="iniH"></h2><div class="rule"></div><div class="meta" id="iniMeta"></div></div>
+    <div class="card scroll"><table id="iniTbl"></table></div>
+  </section>
+
+  <section id="licSec">
+    <div class="shead"><h2 id="licH"></h2><div class="rule"></div><div class="meta" id="licMeta"></div></div>
+    <div class="card scroll"><table id="licTbl"></table></div>
+  </section>
+
+  <section id="decSec">
+    <div class="shead"><h2 id="decH"></h2><div class="rule"></div><div class="meta" id="decMeta"></div></div>
+    <div class="dgrid" id="decGrid"></div>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<script>
+// ===== LIVE DATA CONFIG =========================================
+// Paste your Google Sheet ID between the quotes to switch to live data.
+// It is the long string in the sheet URL: /spreadsheets/d/THIS_PART/edit
+const SHEET_ID = "14WsZastcQlPB3COIflpB8eGe_bLsLrthJqn00RNhFS0";
+// ================================================================
+let ASOF = "2026-05-31";
+let BURN = 21575;   // avg monthly OUTFLOW from the 6-month NBK statement (KWD)
+let DATA;
+const SAMPLE = {
+  // Source: NBK Account Statement, DALIL IN, 30/11/2025–31/05/2026, KW96NBOK...591316
+  cash:[
+    {acct:["NBK — Dalil In Current (•591316)","الوطني — دليل (جاري)"], bank:"NBK", bal:752.393, comm:0},
+  ],
+  // 6-month month-end closing balances from the statement
+  trend:[
+    {m:"Nov 25", bal:797.409},{m:"Dec 25", bal:620.028},{m:"Jan 26", bal:112.643},
+    {m:"Feb 26", bal:161.493},{m:"Mar 26", bal:216.063},{m:"Apr 26", bal:114.918},{m:"May 26", bal:752.393},
+  ],
+  // Actual outflows by type over the 6-month period (no budget set yet → budget=0 hides the marker)
+  exp:[
+    {cat:["Payroll & Salary","الرواتب"], ent:"6-mo actual", bud:0, act:54345.875},
+    {cat:["Outgoing Transfers","تحويلات صادرة"], ent:"6-mo actual", bud:0, act:51801.699},
+    {cat:["KNET Purchases","مشتريات كي-نت"], ent:"6-mo actual", bud:0, act:16309.380},
+    {cat:["Other Debits","مدفوعات أخرى"], ent:"6-mo actual", bud:0, act:6985.000},
+    {cat:["Bank Fees","رسوم بنكية"], ent:"6-mo actual", bud:0, act:7.000},
+  ],
+  // Recent ledger entries (latest first)
+  ledger:[
+    {d:"31-05-2026", desc:["Quick Pay — Hamad Aloraifan (salary)","كويك باي"], amt:250.000},
+    {d:"31-05-2026", desc:["Quick Pay — Shopcotton","كويك باي"], amt:328.000},
+    {d:"26-05-2026", desc:["POS Settlement (CC)","تسوية نقاط بيع"], amt:33.675},
+    {d:"25-05-2026", desc:["NBK Transfer — KFH instalment","تحويل"], amt:-10000.000},
+    {d:"24-05-2026", desc:["NBK Transfer in — Air Co Gen. Trading","تحويل وارد"], amt:10000.000},
+    {d:"24-05-2026", desc:["KNET — Boubyan bill payment","كي-نت"], amt:-350.000},
+    {d:"22-05-2026", desc:["KNET — Ali I. S. Alrasheed","كي-نت"], amt:-530.000},
+    {d:"21-05-2026", desc:["Employer Debit — Salary run","رواتب"], amt:-6800.000},
+  ],
+  flows:{inflow:112356.039, outflow:129448.954, opening:17845.308, closing:752.393, months:6},
+  // Expected incoming loan & planned distribution (loan expected within 2–3 days)
+  loan:{expected:47000, distribution:37750, remaining:9250, eta:"within 2–3 days"},
+  loanLines:[
+    {d:["Salary – May","رواتب مايو"], req:null, disb:10250, st:"Disbursed"},
+    {d:["AFA","AFA"], req:null, disb:1000, st:"Disbursed"},
+    {d:["Sundus","سندس"], req:14000, disb:8000, st:"Disbursed"},
+    {d:["POS machine","أجهزة نقاط البيع"], req:6000, disb:2500, st:"Disbursed"},
+    {d:["KFH","بيت التمويل"], req:null, disb:10000, st:"Disbursed"},
+    {d:["Mishari","مشاري"], req:null, disb:6000, st:"Disbursed"},
+  ],
+  // Outstanding payables to Al Faresi — Statement of Account as of 31-05-2026
+  apAsOf:"2026-05-31", apVendor:["Al Faresi","الفارسي"], apTotal:16700.000, apCount:5,
+  apInvoices:[
+    {date:"15/03/2026", sec:["DAW Project","مشروع DAW"], inv:"INV-34613", desc:["4th Payment – Final Delivery via GitHub (30%)","الدفعة الرابعة — التسليم النهائي (٣٠٪)"], amt:10500.000},
+    {date:"18/04/2026", sec:["POS","نقاط البيع"], inv:"INV-6802", desc:["POS Application Development Services","تطوير تطبيق نقاط البيع"], amt:1500.000},
+    {date:"23/04/2026", sec:["Other","أخرى"], inv:"INV-34640", desc:["Data Entry Management Services (Apr-26)","إدارة إدخال البيانات (أبريل)"], amt:850.000},
+    {date:"17/05/2026", sec:["Other","أخرى"], inv:"INV-34702", desc:["Data Entry Management Services (May-26)","إدارة إدخال البيانات (مايو)"], amt:850.000},
+    {date:"17/05/2026", sec:["POS","نقاط البيع"], inv:"INV-7804", desc:["Merchant Application Development – 50%","تطوير تطبيق التجار — ٥٠٪"], amt:3000.000},
+  ],
+  // Month-essential breakdown (drives the clickable Required Funds tile)
+  monthEssItems:[
+    {n:["Salary","الرواتب"], v:10250},
+    {n:["Rent","الإيجار"], v:253},
+    {n:["Petty cash","النثرية"], v:100},
+    {n:["Server (monthly)","السيرفر الشهري"], v:950},
+  ],
+  // Prepaid wallet balances
+  wallets:[
+    {name:["ARMADA Wallet","محفظة أرمادا"], bal:75.500},
+    {name:["Future Communications Wallet","محفظة المستقبل للاتصالات"], bal:300.000},
+  ],
+  // Future Communications (FCC) international SMS Sender-ID rollout.
+  // Non-UAE statuses per management confirmation (Jun 2026); UAE still open. Email thread confirmed submission only (2-5 May).
+  fccAsOf:"2026-06-01",
+  fccCountries:[
+    {c:["UAE — Etisalat","الإمارات — اتصالات"], st:"a", note:["NOC submitted 2 May — not yet confirmed","قُدّم ٢ مايو — لم يُؤكَّد"]},
+    {c:["UAE — DU","الإمارات — دو"], st:"r", note:["DU registration under process","تسجيل دو قيد المعالجة"]},
+    {c:["KSA","السعودية"], st:"g", note:["Registered (per management)","مُسجّل (حسب الإدارة)"]},
+    {c:["Qatar — Vodafone","قطر — فودافون"], st:"g", note:["Registered (per management)","مُسجّل (حسب الإدارة)"]},
+    {c:["Qatar — Ooredoo","قطر — أوريدو"], st:"g", note:["Registered (per management)","مُسجّل (حسب الإدارة)"]},
+    {c:["Bahrain","البحرين"], st:"g", note:["Registered (per management)","مُسجّل (حسب الإدارة)"]},
+    {c:["Oman","عُمان"], st:"g", note:["Registered (per management)","مُسجّل (حسب الإدارة)"]},
+  ],
+  // Cash-flow FORECAST 2026. May & Jun revised per latest budget; Jul–Dec from earlier CFO budget.
+  forecast:[
+    {m:["May 26","مايو"], need:28161, items:[
+      {n:["Salary – main payroll","الرواتب"],v:10000},{n:["KFH installment","قسط بيت التمويل"],v:5880},
+      {n:["Civil Aviation – Guarantee + Other","الطيران المدني"],v:7000},{n:["Social Security","التأمينات"],v:1883},
+      {n:["Sundus mgmt + server","سندس إدارة وسيرفر"],v:2650},{n:["Rent","الإيجار"],v:253},
+      {n:["Cars installment","قسط السيارات"],v:250},{n:["Insurance + MOI + comms + others","تأمين ورخص واتصالات"],v:245}]},
+    {m:["Jun 26","يونيو"], need:21908, items:[
+      {n:["Salary – main payroll","الرواتب"],v:10000},{n:["KFH installment","قسط بيت التمويل"],v:7940},
+      {n:["Sundus mgmt + server","سندس إدارة وسيرفر"],v:1800},{n:["Games (Taktik + 30s)","الألعاب"],v:1200},
+      {n:["Social Security","التأمينات"],v:400},{n:["Rent","الإيجار"],v:253},
+      {n:["Petty cash + comms + others","نثرية واتصالات"],v:315}]},
+    {m:["Jul 26","يوليو"], need:62658, items:[
+      {n:["POS machines (500 units)","أجهزة نقاط البيع"],v:32500},{n:["Salary – main payroll","الرواتب"],v:10000},
+      {n:["KFH installment","قسط بيت التمويل"],v:7940},{n:["30 Seconds upfront","عقد ٣٠ ثانية"],v:6000},
+      {n:["Riders + drivers","سائقون"],v:2250},{n:["Sundus + games","سندس وألعاب"],v:3000},{n:["Other","أخرى"],v:968}]},
+    {m:["Aug 26","أغسطس"], need:26904, items:[
+      {n:["Salary – main payroll","الرواتب"],v:10000},{n:["KFH installment","قسط بيت التمويل"],v:7940},
+      {n:["Riders + drivers","سائقون"],v:2250},{n:["30 Seconds + games","عقود وألعاب"],v:3200},
+      {n:["Sundus + other","سندس وأخرى"],v:3514}]},
+    {m:["Sep 26","سبتمبر"], need:22039, items:[
+      {n:["Salary – main payroll","الرواتب"],v:10000},{n:["Riders + drivers","سائقون"],v:2250},
+      {n:["Marketing","التسويق"],v:2000},{n:["Games + 30s + Party1","ألعاب وعقود"],v:3200},
+      {n:["Sundus + other","سندس وأخرى"],v:4589}]},
+    {m:["Oct 26","أكتوبر"], need:22039, items:[
+      {n:["Salary – main payroll","الرواتب"],v:10000},{n:["Riders + drivers","سائقون"],v:2250},
+      {n:["Marketing","التسويق"],v:2000},{n:["Games + 30s + Party1","ألعاب وعقود"],v:3200},
+      {n:["Sundus + other","سندس وأخرى"],v:4589}]},
+    {m:["Nov 26","نوفمبر"], need:22039, items:[
+      {n:["Salary – main payroll","الرواتب"],v:10000},{n:["Riders + drivers","سائقون"],v:2250},
+      {n:["Marketing","التسويق"],v:2000},{n:["Games + 30s + Party1","ألعاب وعقود"],v:3200},
+      {n:["Sundus + other","سندس وأخرى"],v:4589}]},
+    {m:["Dec 26","ديسمبر"], need:22039, items:[
+      {n:["Salary – main payroll","الرواتب"],v:10000},{n:["Riders + drivers","سائقون"],v:2250},
+      {n:["Marketing","التسويق"],v:2000},{n:["Games + 30s + Party1","ألعاب وعقود"],v:3200},
+      {n:["Sundus + other","سندس وأخرى"],v:4589}]},
+  ],
+  forecastTotal:227787, onHand:752.393,
+  // Biggest forward commitments by category (8-month)
+  forecastCats:[
+    {c:["Salaries / Payroll","الرواتب"], v:80000},
+    {c:["KFH Installment","قسط بيت التمويل"], v:39700},
+    {c:["POS Machines (500 units)","أجهزة نقاط البيع"], v:32500},
+    {c:["Sundus (mgmt+server+pending)","سندس"], v:25750},
+    {c:["30 Seconds Contract","عقد ٣٠ ثانية"], v:16000},
+    {c:["Installments – Cars + Bikes","أقساط السيارات والدراجات"], v:9000},
+    {c:["Games (Taktik+30s)","الألعاب"], v:8400},
+    {c:["Marketing","التسويق"], v:8000},
+  ],
+  ini:[
+    {n:["DAW × Ninja JV","شراكة DAW × Ninja"], owner:["N. Ahmed","نزار"], pct:55, ms:["Owner sign-off on revenue floor","موافقة المالك على حد الإيراد"], due:"2026-06-10", st:"a"},
+    {n:["KNET / NBK Gateway Go-Live","تشغيل بوابة الدفع"], owner:["Boulos B","بولس"], pct:80, ms:["Production credentials live","تفعيل بيانات الإنتاج"], due:"2026-06-05", st:"a"},
+    {n:["Trawex Travel API Dispute","نزاع واجهة Trawex"], owner:["N. Ahmed","نزار"], pct:40, ms:["Resolve Hotel/Car/Transfer delivery","حل تسليم الفنادق/السيارات"], due:"2026-06-20", st:"r"},
+    {n:["Al Faresi IT Invoice Dispute","نزاع فواتير الفارسي"], owner:["N. Ahmed","نزار"], pct:60, ms:["Settle KD 15,750 disputed SOA","تسوية المبلغ المتنازع عليه"], due:"2026-06-30", st:"a"},
+  ],
+  lic:[
+    {d:["Commercial Registration","السجل التجاري"], auth:"MoCI", no:"CR-118742", exp:"2027-01-15", copy:true},
+    {d:["Municipality License","رخصة البلدية"], auth:"Baladiya", no:"MUN-44120", exp:"2026-12-01", copy:true},
+    {d:["Civil ID — Signatory","البطاقة المدنية — المفوّض"], auth:"PACI", no:"—", exp:"2026-09-30", copy:true},
+    {d:['Trademark "DAW"',"العلامة التجارية DAW"], auth:"MoCI", no:"TM-30199", exp:"2031-03-01", copy:true},
+    {d:["Signature Authorisation","تفويض التوقيع"], auth:"MoCI", no:"SIG-2025-04", exp:"2027-02-01", copy:true},
+  ],
+  dec:[
+    {q:["Open Domain + Apple & Android store accounts (Taktik Games)","فتح حساب نطاق ومتجري أبل وأندرويد (تكتيك)"], from:["Ali Al Rasheed","علي الرشيد"], raised:"2026-06-01", need:"2026-06-15", amt:50},
+    {q:["Civil Aviation guarantee 5,000 + 250 fees (4 yrs); Trawex renewal 306 + IATA/Trawex support 1,444","ضمان الطيران المدني ٥٠٠٠ + ٢٥٠ رسوم؛ تجديد Trawex ٣٠٦ + دعم IATA ١٤٤٤"], from:["Ali Al Rasheed","علي الرشيد"], raised:"2026-06-01", need:"2026-06-20", amt:7000},
+    {q:["Faris payment due (Al Faresi outstanding)","دفعة الفارسي المستحقة"], from:["Ali Al Rasheed","علي الرشيد"], raised:"2026-06-01", need:"2026-06-15", amt:16700},
+    {q:["KFH balance payment (up to Apr 2026)","سداد رصيد بيت التمويل (حتى أبريل ٢٠٢٦)"], from:["Ali Al Rasheed","علي الرشيد"], raised:"2026-06-01", need:"2026-06-10", amt:6029},
+    {q:["Month essentials – May 2026: Salary 10,250 + Rent 253 + Petty 100 + Server 950","أساسيات مايو ٢٠٢٦: راتب ١٠٢٥٠ + إيجار ٢٥٣ + نثرية ١٠٠ + سيرفر ٩٥٠"], from:["Ali Al Rasheed","علي الرشيد"], raised:"2026-06-01", need:"2026-06-05", amt:11553},
+  ]
+};
+
+const T = {
+  en:{title:"Management Cockpit", asof:(d)=>`Statement period 30 Nov 2025 – 31 May 2026 · NBK · KWD`,
+    kCash:"Closing Balance", kCashS:"NBK current account", kAvail:"Available Cash", kAvailS:"after committed funds",
+    kIn:"Money In", kOut:"Money Out", kMo:"-month total", kNet:"Net Change", kNetS:"over the period",
+    kReq:"Required Funds", kReqS:"pending decisions", kEss:"Month essential", kClick:"Click for breakdown",
+    kRun:"Runway", kRunS:"weeks at current burn", kVar:"Expenses vs Budget", kVarS:"period to date",
+    trendH:"Cash Trend", trendMeta:"month-end balance", ledgerH:"Recent Transactions", ledgerMeta:"latest first",
+    walletH:"Prepaid Wallets", walletMeta:"vendor balances",
+    loanH:"Expected Loan & Distribution", loanMeta:"incoming funds",
+    loanExp:"Expected Loan", loanDist:"Planned Distribution", loanRem:"Remaining in Account",
+    th_req:"Requested", th_disb:"Disbursed",
+    fccH:"Future Communications — Country Rollout", fccMeta:"international SMS Sender-ID", th_country:"Country / Operator", th_status:"Status", th_note:"Note",
+    fcc_done:"Registered", fcc_prog:"In Process", fcc_pend:"Under Process",
+    apH:"Outstanding Invoices — Al Faresi", apMeta:"accounts payable", th_inv:"Invoice #", th_sec:"Section", outstanding:"Outstanding",
+    fcH:"Funds Required — Forecast", fcMeta:"May–Dec 2026", th_month:"Month", th_need:"Required (KWD)",
+    fcAlert:(need,have)=>`<b>KWD ${need}</b> required over the next 8 months vs <b>KWD ${have}</b> on hand. A funding gap of <b>KWD ${need}</b> must be covered by collections, owner injection, or financing.`,
+    fcCatH:"Largest commitments", th_cat:"Commitment", th_amt8:"8-month (KWD)",
+    fcClick:"click for breakdown", fcHint:"Tap any month's bar to see what makes up that month's requirement.",
+    th_date:"Date", th_desc:"Description", th_amt:"Amount (KWD)",
+    cashH:"Cash Position", cashMeta:"per account",
+    th_acct:"Account", th_bank:"Bank", th_bal:"Balance", th_comm:"Committed", th_avail:"Available", total:"Total",
+    expH:"Where Money Went", expMeta:"6-month outflow by type",
+    iniH:"Initiatives — Status", iniMeta:"things done",
+    th_ini:"Initiative", th_owner:"Owner", th_pct:"Progress", th_ms:"Next milestone", th_due:"Due", th_days:"Days", th_st:"Status",
+    licH:"License & Compliance", licMeta:"register",
+    th_doc:"Document", th_auth:"Authority", th_no:"No.", th_exp:"Expiry", th_copy:"Copy",
+    decH:"Pending Decisions", decMeta:"awaiting sign-off",
+    raised:"Raised", need:"Needed by", over:"over", under:"under",
+    st:{g:"On Track",a:"At Risk",r:"Blocked",x:"Done"},
+    lst:{valid:"Valid",soon:"Renew Soon",crit:"Critical",exp:"Expired"},
+    copyY:"On file", copyN:"Missing", view:"Download",
+    foot:"Cash refreshed weekly; full pack circulated monthly. Banking detail is need-to-know.",
+    legend:["On Track / Valid","At Risk / Renew Soon","Blocked / Critical","Expired"]},
+  ar:{title:"لوحة الإدارة", asof:(d)=>`فترة الكشف ٣٠ نوفمبر ٢٠٢٥ – ٣١ مايو ٢٠٢٦ · الوطني · د.ك`,
+    kCash:"الرصيد الختامي", kCashS:"حساب الوطني الجاري", kAvail:"النقد المتاح", kAvailS:"بعد المبالغ الملتزم بها",
+    kIn:"وارد", kOut:"صادر", kMo:" أشهر", kNet:"صافي التغير", kNetS:"خلال الفترة",
+    kReq:"الأموال المطلوبة", kReqS:"قرارات معلّقة", kEss:"أساسيات الشهر", kClick:"اضغط للتفاصيل",
+    kRun:"مدى السيولة", kRunS:"أسبوع بالمعدل الحالي", kVar:"المصروف مقابل الموازنة", kVarS:"حتى تاريخه",
+    trendH:"اتجاه السيولة", trendMeta:"الرصيد آخر الشهر", ledgerH:"أحدث الحركات", ledgerMeta:"الأحدث أولاً",
+    walletH:"المحافظ المدفوعة مسبقاً", walletMeta:"أرصدة الموردين",
+    loanH:"القرض المتوقع والتوزيع", loanMeta:"أموال واردة",
+    loanExp:"القرض المتوقع", loanDist:"التوزيع المخطط", loanRem:"المتبقي في الحساب",
+    th_req:"المطلوب", th_disb:"المصروف",
+    fccH:"المستقبل للاتصالات — حالة الدول", fccMeta:"تسجيل معرّف الرسائل الدولية", th_country:"الدولة / المشغّل", th_status:"الحالة", th_note:"ملاحظة",
+    fcc_done:"مُسجّل", fcc_prog:"قيد التنفيذ", fcc_pend:"قيد المعالجة",
+    apH:"فواتير مستحقة — الفارسي", apMeta:"ذمم دائنة", th_inv:"رقم الفاتورة", th_sec:"القسم", outstanding:"مستحقة",
+    fcH:"الأموال المطلوبة — التوقعات", fcMeta:"مايو–ديسمبر ٢٠٢٦", th_month:"الشهر", th_need:"المطلوب (د.ك)",
+    fcAlert:(need,have)=>`مطلوب <b>${need} د.ك</b> خلال الأشهر الثمانية القادمة مقابل <b>${have} د.ك</b> متوفرة. فجوة تمويل قدرها <b>${need} د.ك</b> يجب تغطيتها من التحصيلات أو ضخ المالك أو التمويل.`,
+    fcCatH:"أكبر الالتزامات", th_cat:"الالتزام", th_amt8:"٨ أشهر (د.ك)",
+    fcClick:"اضغط للتفاصيل", fcHint:"اضغط على عمود أي شهر لعرض تفاصيل متطلباته.",
+    th_date:"التاريخ", th_desc:"البيان", th_amt:"المبلغ (د.ك)",
+    cashH:"المركز النقدي", cashMeta:"حسب الحساب",
+    th_acct:"الحساب", th_bank:"البنك", th_bal:"الرصيد", th_comm:"ملتزم", th_avail:"المتاح", total:"الإجمالي",
+    expH:"أوجه الصرف", expMeta:"الصادر حسب النوع — ٦ أشهر",
+    iniH:"المبادرات — الحالة", iniMeta:"الأعمال المنجزة",
+    th_ini:"المبادرة", th_owner:"المسؤول", th_pct:"التقدّم", th_ms:"المرحلة التالية", th_due:"الاستحقاق", th_days:"أيام", th_st:"الحالة",
+    licH:"التراخيص والامتثال", licMeta:"السجل",
+    th_doc:"المستند", th_auth:"الجهة", th_no:"الرقم", th_exp:"الانتهاء", th_copy:"نسخة",
+    decH:"قرارات معلّقة", decMeta:"بانتظار الاعتماد",
+    raised:"أُثير في", need:"مطلوب قبل",
+    st:{g:"على المسار",a:"في خطر",r:"متوقّف",x:"منجز"},
+    lst:{valid:"ساري",soon:"قرب التجديد",crit:"حرج",exp:"منتهٍ"},
+    copyY:"محفوظة", copyN:"مفقودة", view:"تنزيل",
+    foot:"يُحدَّث النقد أسبوعياً ويُعمَّم التقرير الكامل شهرياً. تفاصيل البنوك حسب الحاجة.",
+    legend:["على المسار / ساري","في خطر / قرب التجديد","متوقّف / حرج","منتهٍ"]}
+};
+
+let lang="en";
+const fmt=n=>n.toLocaleString('en-US');
+const fmtk=n=>n.toLocaleString('en-US',{minimumFractionDigits:3,maximumFractionDigits:3});
+// smart: show decimals only when they carry value (752.393 stays, 10500.000 -> 10,500)
+const fmts=n=>{n=Number(n)||0; return Number.isInteger(n)?n.toLocaleString('en-US'):n.toLocaleString('en-US',{minimumFractionDigits:3,maximumFractionDigits:3}).replace(/\.?0+$/,'');};
+function pdate(d){let x=new Date(String(d).trim()+"T00:00:00");if(isNaN(x))x=new Date(String(d).trim());return x;}
+let today=pdate(ASOF);
+const days=d=>Math.round((pdate(d)-today)/86400000);
+const licState=d=>{const x=days(d); return x<0?"exp":x<=30?"crit":x<=60?"soon":"valid";};
+const licClass={valid:"g",soon:"a",crit:"r",exp:"x"};
+
+function setLang(l){
+  lang=l;
+  document.body.setAttribute("dir", l==="ar"?"rtl":"ltr");
+  enBtn.classList.toggle("on", l==="en");
+  arBtn.classList.toggle("on", l==="ar");
+  render();
+}
+
+function render(){
+  const t=T[lang], L=lang==="ar"?1:0;
+  title.textContent=t.title;
+  asof.innerHTML=t.asof(ASOF);
+
+  // KPIs — driven by the real statement
+  const totBal=DATA.cash.reduce((s,r)=>s+r.bal,0);
+  const totComm=DATA.cash.reduce((s,r)=>s+r.comm,0);
+  const avail=totBal-totComm;
+  const F=DATA.flows||{};
+  const net=(F.inflow||0)-(F.outflow||0);
+  const runway=Math.round(avail/(BURN/4.333));
+  const totAct=DATA.exp.reduce((s,r)=>s+r.act,0);
+  const monthEss=((DATA.dec||[]).find(r=>/Month essentials|أساسيات/.test(r.q[0]+r.q[1]))||{}).amt||0;
+  const essItems=DATA.monthEssItems||[];
+  const essTotal=essItems.reduce((s,r)=>s+r.v,0)||monthEss;
+  kpis.innerHTML=`
+    <div class="tile accent clickable" id="reqTile" onclick="toggleReq()" title="${t.kClick}">
+      <div class="cap">${t.kReq} <span id="reqChev" style="float:${L?'left':'right'};transition:transform .2s">▸</span></div>
+      <div class="val pos">${fmts(essTotal)}</div><div class="sub">${t.kEss}</div></div>
+    <div class="tile"><div class="cap">${t.kCash}</div><div class="val">${fmts(totBal)}</div><div class="sub">${t.kCashS}</div></div>
+    <div class="tile"><div class="cap">${t.kIn}</div><div class="val neg">${fmts(F.inflow||0)}</div><div class="sub">${F.months||6}${t.kMo}</div></div>
+    <div class="tile"><div class="cap">${t.kOut}</div><div class="val pos">${fmts(F.outflow||0)}</div><div class="sub">${F.months||6}${t.kMo}</div></div>
+    <div class="tile"><div class="cap">${t.kNet}</div><div class="val ${net<0?'pos':'neg'}">${net>0?'+':''}${fmts(net)}</div><div class="sub">${t.kNetS}</div></div>`;
+  // detail panel
+  let rd=`<div class="reqdetail-inner"><div class="reqdetail-head">${t.kReq} — ${t.kEss}</div><table class="reqtbl">`;
+  essItems.forEach(r=>{ rd+=`<tr><td>${r.n[L]}</td><td class="num">${fmts(r.v)}</td></tr>`; });
+  rd+=`<tr class="reqtot"><td>${t.total}</td><td class="num">${fmts(essTotal)}</td></tr></table></div>`;
+  document.getElementById('reqDetail').innerHTML=rd;
+
+  // Cash table
+  cashH.textContent=t.cashH; cashMeta.textContent=t.cashMeta;
+  let ch=`<thead><tr><th>${t.th_acct}</th><th>${t.th_bank}</th><th class="num">${t.th_bal}</th></tr></thead><tbody>`;
+  DATA.cash.forEach(r=>{ch+=`<tr><td class="strong">${r.acct[L]}</td><td>${r.bank}</td><td class="num strong">${fmts(r.bal)}</td></tr>`;});
+  ch+=`<tr class="totrow"><td>${t.total}</td><td></td><td class="num">${fmts(totBal)}</td></tr></tbody>`;
+  cashTbl.innerHTML=ch;
+
+  // Prepaid wallets
+  if(DATA.wallets&&DATA.wallets.length){
+    walletH.textContent=t.walletH; walletMeta.textContent=t.walletMeta;
+    let wt="";
+    DATA.wallets.forEach(w=>{ wt+=`<div class="tile accent"><div class="cap">${w.name[L]}</div><div class="val">${fmts(w.bal)}</div><div class="sub">KWD</div></div>`; });
+    walletTiles.innerHTML=wt;
+  }
+
+  // Expected loan & distribution
+  if(DATA.loan){
+    loanH.textContent=t.loanH; loanMeta.textContent=t.loanMeta+(DATA.loan.eta?" · "+DATA.loan.eta:"");
+    loanTiles.innerHTML=`
+      <div class="tile"><div class="cap">${t.loanExp}</div><div class="val neg">${fmts(DATA.loan.expected)}</div><div class="sub">KWD</div></div>
+      <div class="tile"><div class="cap">${t.loanDist}</div><div class="val">${fmts(DATA.loan.distribution)}</div><div class="sub">KWD</div></div>
+      <div class="tile accent"><div class="cap">${t.loanRem}</div><div class="val">${fmts(DATA.loan.remaining)}</div><div class="sub">KWD</div></div>`;
+    let lt=`<thead><tr><th>${t.th_desc}</th><th class="num">${t.th_req}</th><th class="num">${t.th_disb}</th><th>${t.th_status}</th></tr></thead><tbody>`;
+    (DATA.loanLines||[]).forEach(r=>{
+      lt+=`<tr><td class="strong">${r.d[L]}</td>
+      <td class="num">${r.req?fmts(r.req):'–'}</td>
+      <td class="num strong">${fmts(r.disb)}</td>
+      <td><span class="pill g"><span class="dot"></span>${r.st}</span></td></tr>`;});
+    const treq=(DATA.loanLines||[]).reduce((s,r)=>s+(r.req||0),0);
+    const tdisb=(DATA.loanLines||[]).reduce((s,r)=>s+(r.disb||0),0);
+    lt+=`<tr class="totrow"><td>${t.total}</td><td class="num">${treq?fmts(treq):'–'}</td><td class="num">${fmts(tdisb)}</td><td></td></tr></tbody>`;
+    loanTbl.innerHTML=lt;
+  }
+
+  // FCC country rollout
+  if(DATA.fccCountries&&DATA.fccCountries.length){
+    fccH.textContent=t.fccH; fccMeta.textContent=t.fccMeta+" · as of "+DATA.fccAsOf;
+    const lbl={g:t.fcc_done,a:t.fcc_prog,r:t.fcc_pend};
+    let ft=`<thead><tr><th>${t.th_country}</th><th>${t.th_status}</th><th>${t.th_note}</th></tr></thead><tbody>`;
+    DATA.fccCountries.forEach(r=>{
+      ft+=`<tr><td class="strong">${r.c[L]}</td>
+      <td><span class="pill ${r.st}"><span class="dot"></span>${lbl[r.st]}</span></td>
+      <td style="color:var(--muted)">${r.note[L]}</td></tr>`;});
+    ft+="</tbody>"; fccTbl.innerHTML=ft;
+  }
+
+  // Cash trend sparkline
+  trendH.textContent=t.trendH; trendMeta.textContent=t.trendMeta;
+  if(DATA.trend&&DATA.trend.length){
+    const T2=DATA.trend, w=720,h=200,pad=34;
+    const xs=T2.map((_,i)=>pad+i*((w-2*pad)/(T2.length-1)));
+    const mx=Math.max(...T2.map(p=>p.bal)), mn=Math.min(...T2.map(p=>p.bal));
+    const yf=v=>h-pad-((v-mn)/((mx-mn)||1))*(h-2*pad);
+    const pts=T2.map((p,i)=>`${xs[i]},${yf(p.bal)}`).join(' ');
+    let g=`<polyline fill="none" stroke="var(--ink)" stroke-width="2.5" points="${pts}"/>`;
+    g+=`<polygon fill="var(--ink)" opacity="0.06" points="${pad},${h-pad} ${pts} ${w-pad},${h-pad}"/>`;
+    T2.forEach((p,i)=>{ g+=`<circle cx="${xs[i]}" cy="${yf(p.bal)}" r="3.5" fill="var(--gold)"/>`;
+      g+=`<text x="${xs[i]}" y="${h-pad+16}" font-size="11" fill="var(--muted)" text-anchor="middle">${p.m}</text>`;
+      g+=`<text x="${xs[i]}" y="${yf(p.bal)-9}" font-size="10" fill="var(--ink)" text-anchor="middle" font-weight="700">${fmt(Math.round(p.bal))}</text>`;});
+    document.getElementById('trendSvg').innerHTML=g;
+  }
+
+  // Expenses bars
+  expH.textContent=t.expH; expMeta.textContent=t.expMeta;
+  const maxV=Math.max(...DATA.exp.map(r=>Math.max(r.bud,r.act)));
+  let eb="";
+  DATA.exp.forEach(r=>{
+    const hasBud=r.bud>0, over=hasBud&&r.act>r.bud;
+    const aw=(r.act/maxV*100).toFixed(1), bw=(r.bud/maxV*100).toFixed(1);
+    const dv=r.act-r.bud;
+    eb+=`<div class="erow">
+      <div class="lbl">${r.cat[L]}<small>${r.ent}</small></div>
+      <div class="track">${hasBud?`<div class="budget" style="width:${bw}%"></div>`:''}<div class="actual ${over?'over':''}" style="width:${aw}%"></div></div>
+      <div class="amt"><b>${fmts(r.act)}</b>${hasBud?` / ${fmt(r.bud)} <span style="color:${over?'var(--red)':'var(--green)'}">(${dv>0?'+':''}${fmt(dv)})</span>`:''}</div>
+    </div>`;
+  });
+  expBars.innerHTML=eb;
+
+  // Recent transactions ledger
+  ledgerH.textContent=t.ledgerH; ledgerMeta.textContent=t.ledgerMeta;
+  if(DATA.ledger&&DATA.ledger.length){
+    let lg=`<thead><tr><th>${t.th_date}</th><th>${t.th_desc}</th><th class="num">${t.th_amt}</th></tr></thead><tbody>`;
+    DATA.ledger.forEach(x=>{const cr=x.amt>=0;
+      lg+=`<tr><td style="color:var(--muted);white-space:nowrap">${x.d}</td><td>${x.desc[L]}</td>
+      <td class="num strong" style="color:${cr?'var(--green)':'var(--red)'}">${cr?'+':''}${fmts(x.amt)}</td></tr>`;});
+    lg+="</tbody>"; ledgerTbl.innerHTML=lg;
+  }
+
+  // Outstanding payables — Al Faresi
+  if(DATA.apInvoices&&DATA.apInvoices.length){
+    apH.textContent=t.apH.replace("Al Faresi",DATA.apVendor[L]).replace("الفارسي",DATA.apVendor[L]);
+    apMeta.textContent=t.apMeta+" · as of "+DATA.apAsOf;
+    let at=`<thead><tr><th>${t.th_date}</th><th>${t.th_sec}</th><th>${t.th_inv}</th><th>${t.th_desc}</th><th class="num">${t.th_amt}</th><th>${t.th_status}</th></tr></thead><tbody>`;
+    DATA.apInvoices.forEach(r=>{
+      at+=`<tr><td style="color:var(--muted);white-space:nowrap">${r.date}</td><td>${r.sec[L]}</td>
+      <td class="strong" style="white-space:nowrap">${r.inv}</td><td>${r.desc[L]}</td>
+      <td class="num strong">${fmts(r.amt)}</td>
+      <td><span class="pill a"><span class="dot"></span>${t.outstanding}</span></td></tr>`;});
+    at+=`<tr class="totrow"><td colspan="4">${t.total}</td><td class="num">${fmts(DATA.apTotal)}</td><td>${DATA.apCount}</td></tr></tbody>`;
+    apTbl.innerHTML=at;
+  }
+
+  // Funds forecast
+  if(DATA.forecast&&DATA.forecast.length){
+    fcH.textContent=t.fcH; fcMeta.textContent=t.fcMeta;
+    document.getElementById('fcAlert').innerHTML=
+      `<div class="alert">${t.fcAlert(fmt(DATA.forecastTotal), fmt(Math.round(DATA.onHand)))}</div>`;
+    const FC=DATA.forecast, w=720,h=220,pad=40, n=FC.length;
+    const bw=(w-2*pad)/n*0.6, gap=(w-2*pad)/n;
+    const mx=Math.max(...FC.map(p=>p.need));
+    let g='';
+    FC.forEach((p,i)=>{
+      const x=pad+i*gap+(gap-bw)/2, bh=(p.need/mx)*(h-2*pad), y=h-pad-bh;
+      const big=p.need>40000;
+      g+=`<rect class="fcbar" data-i="${i}" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="${big?'var(--red)':'var(--ink)'}" style="cursor:pointer"><title>${p.m[L]} — ${t.fcClick}</title></rect>`;
+      g+=`<text x="${x+bw/2}" y="${y-6}" font-size="10" font-weight="700" fill="var(--ink)" text-anchor="middle">${fmt(Math.round(p.need/1000))}k</text>`;
+      g+=`<text x="${x+bw/2}" y="${h-pad+15}" font-size="11" fill="var(--muted)" text-anchor="middle">${p.m[L]}</text>`;
+    });
+    // on-hand reference line
+    const yh=h-pad-(DATA.onHand/mx)*(h-2*pad);
+    g+=`<line x1="${pad}" y1="${yh}" x2="${w-pad}" y2="${yh}" stroke="var(--green)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+    document.getElementById('fcSvg').innerHTML=g;
+    // bar click -> month detail
+    document.querySelectorAll('#fcSvg .fcbar').forEach(bar=>{
+      bar.addEventListener('click',()=>showFcMonth(+bar.dataset.i));
+    });
+    document.getElementById('fcMonthDetail').innerHTML=
+      `<div class="fcdhint">${t.fcHint}</div>`;
+    // commitments table
+    let ct=`<thead><tr><th>${t.th_cat}</th><th class="num">${t.th_amt8}</th></tr></thead><tbody>`;
+    DATA.forecastCats.forEach(r=>{ct+=`<tr><td class="strong">${r.c[L]}</td><td class="num strong">${fmt(r.v)}</td></tr>`;});
+    ct+=`<tr class="totrow"><td>${t.total}</td><td class="num">${fmt(DATA.forecastTotal)}</td></tr></tbody>`;
+    fcCatTbl.innerHTML=ct;
+  }
+
+  // Initiatives
+  iniH.textContent=t.iniH; iniMeta.textContent=t.iniMeta;
+  let ih=`<thead><tr><th>${t.th_ini}</th><th>${t.th_owner}</th><th>${t.th_pct}</th><th>${t.th_ms}</th><th class="num">${t.th_due}</th><th class="num">${t.th_days}</th><th>${t.th_st}</th></tr></thead><tbody>`;
+  DATA.ini.forEach(r=>{
+    const dl=days(r.due);
+    ih+=`<tr>
+      <td class="strong">${r.n[L]}</td><td>${r.owner[L]}</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="prog" style="flex:1"><span style="width:${r.pct}%"></span></div><span style="font-size:.74rem;color:var(--muted)">${r.pct}%</span></div></td>
+      <td>${r.ms[L]}</td><td class="num">${r.due}</td>
+      <td class="num" style="color:${dl<7?'var(--red)':dl<14?'var(--amber)':'var(--muted)'};font-weight:700">${dl}</td>
+      <td><span class="pill ${r.st}"><span class="dot"></span>${t.st[r.st]}</span></td></tr>`;
+  });
+  ih+="</tbody>"; iniTbl.innerHTML=ih;
+
+  // Licenses
+  licH.textContent=t.licH; licMeta.textContent=t.licMeta;
+  let lh=`<thead><tr><th>${t.th_doc}</th><th>${t.th_auth}</th><th>${t.th_no}</th><th class="num">${t.th_exp}</th><th class="num">${t.th_days}</th><th>${t.th_st}</th><th>${t.th_copy}</th></tr></thead><tbody>`;
+  DATA.lic.forEach(r=>{
+    const s=licState(r.exp), dl=days(r.exp);
+    lh+=`<tr>
+      <td class="strong">${r.d[L]}</td><td>${r.auth}</td><td style="color:var(--muted);font-variant-numeric:tabular-nums">${r.no}</td>
+      <td class="num">${r.exp}</td>
+      <td class="num" style="font-weight:700;color:${dl<0?'var(--red)':dl<=30?'var(--red)':dl<=60?'var(--amber)':'var(--muted)'}">${dl}</td>
+      <td><span class="pill ${licClass[s]}"><span class="dot"></span>${t.lst[s]}</span></td>
+      <td>${ r.link ? `<a class="dl" href="${r.link}" target="_blank" rel="noopener">⬇ ${t.view}</a>` : (r.copy ? `<span class="dl off" title="Add a file link in the Licenses sheet (FileLink column)">⬇ ${t.view}</span>` : `<span class="miss">✕ ${t.copyN}</span>`) }</td></tr>`;
+  });
+  lh+="</tbody>"; licTbl.innerHTML=lh;
+
+  // Decisions
+  decH.textContent=t.decH; decMeta.textContent=t.decMeta;
+  let dg="";
+  DATA.dec.forEach(r=>{
+    const dl=days(r.need);
+    dg+=`<div class="dcard">
+      <div class="dq">${r.q[L]}</div>
+      ${r.amt?`<div style="font-family:Fraunces,serif;font-weight:600;font-size:1.15rem;color:var(--ink);margin-bottom:8px">KD ${fmt(r.amt)}</div>`:''}
+      <div class="dmeta"><span>${r.from[L]}</span><span><b style="color:${dl<7?'var(--red)':'var(--amber)'}">${dl}d</b></span></div>
+      <div class="dmeta" style="margin-top:5px"><span>${t.raised}: ${r.raised}</span><span>${t.need}: <b>${r.need}</b></span></div>
+    </div>`;
+  });
+  decGrid.innerHTML=dg;
+
+  // footer
+  foot.innerHTML=`${t.foot}<div class="legend">
+    <span><i style="background:var(--green)"></i>${t.legend[0]}</span>
+    <span><i style="background:var(--amber)"></i>${t.legend[1]}</span>
+    <span><i style="background:var(--red)"></i>${t.legend[2]}</span>
+    <span><i style="background:var(--red);opacity:.6"></i>${t.legend[3]}</span></div>`;
+}
+
+// ===== Google Sheets live loader =====
+function parseCSV(t){
+  const rows=[];let i=0,f='',row=[],q=false;
+  while(i<t.length){const ch=t[i];
+    if(q){ if(ch=='"'){ if(t[i+1]=='"'){f+='"';i++;} else q=false; } else f+=ch; }
+    else { if(ch=='"')q=true; else if(ch==','){row.push(f);f='';}
+      else if(ch=='\n'){row.push(f);rows.push(row);row=[];f='';}
+      else if(ch=='\r'){} else f+=ch; }
+    i++;
+  }
+  if(f.length||row.length){row.push(f);rows.push(row);}
+  return rows;
+}
+function toObjs(rows){
+  if(!rows.length)return[];
+  const h=rows[0].map(x=>x.trim());
+  return rows.slice(1).filter(r=>r.some(c=>(c||'').trim()!=='')).map(r=>{
+    const o={};h.forEach((k,j)=>o[k]=(r[j]||'').trim());return o;});
+}
+const num=v=>Number(String(v).replace(/[, ]/g,''))||0;
+const bool=v=>/^(true|1|y|yes|✓)$/i.test(String(v).trim());
+const stMap={'on track':'g','g':'g','done':'x','x':'x','at risk':'a','a':'a','blocked':'r','r':'r'};
+const stNorm=v=>stMap[String(v).trim().toLowerCase()]||'g';
+
+async function tab(id,name){
+  const url=`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
+  const r=await fetch(url); if(!r.ok) throw new Error(name+' HTTP '+r.status);
+  return toObjs(parseCSV(await r.text()));
+}
+async function loadLive(id){
+  const [cfg,cash,wal,tr,exp,led,fc,fcd,com,ini,lic,fcc,ap,dec,ess]=await Promise.all(
+    ['Config','Cash','Wallets','Trend','Expenses','Ledger','Forecast','ForecastDetail','Commitments',
+     'Initiatives','Licenses','FCC_Countries','Payables','Decisions','MonthEssentials'].map(n=>tab(id,n)));
+  const cf={}; cfg.forEach(r=>cf[r.Key]=r.Value);
+  const apList=ap.map(r=>({date:r.Date,sec:[r.Section_EN,r.Section_AR],inv:r.Invoice,desc:[r.Desc_EN,r.Desc_AR],amt:num(r.Amount)}));
+  // group forecast detail line items by month key
+  const detByMonth={};
+  (fcd||[]).forEach(r=>{const k=(r.Month_EN||'').trim(); (detByMonth[k]=detByMonth[k]||[]).push({n:[r.Item_EN,r.Item_AR],v:num(r.Value)});});
+  return {
+    _asof: cf.ASOF||ASOF, _burn: num(cf.BURN)||BURN,
+    cash: cash.map(r=>({acct:[r.Account_EN,r.Account_AR],bank:r.Bank,bal:num(r.Balance),comm:num(r.Committed)})),
+    wallets: wal.map(r=>({name:[r.Name_EN,r.Name_AR],bal:num(r.Balance)})),
+    trend: tr.map(r=>({m:r.Month,bal:num(r.Balance)})),
+    exp:  exp.map(r=>({cat:[r.Category_EN,r.Category_AR],ent:r.Entity,bud:num(r.Budget),act:num(r.Actual)})),
+    ledger: led.map(r=>({d:r.Date,desc:[r.Desc_EN,r.Desc_AR],amt:num(r.Amount)})),
+    forecast: fc.map(r=>({m:[r.Month_EN,r.Month_AR],need:num(r.Required),items:detByMonth[(r.Month_EN||'').trim()]||[]})),
+    forecastCats: com.map(r=>({c:[r.Category_EN,r.Category_AR],v:num(r.Value)})),
+    forecastTotal: num(cf.FORECAST_TOTAL), onHand: num(cf.ONHAND),
+    monthEssItems: ess.map(r=>({n:[r.Item_EN,r.Item_AR],v:num(r.Value)})),
+    flows:{inflow:num(cf.FLOW_INFLOW),outflow:num(cf.FLOW_OUTFLOW),opening:num(cf.FLOW_OPENING),closing:num(cf.FLOW_CLOSING),months:num(cf.FLOW_MONTHS)||6},
+    ini:  ini.map(r=>({n:[r.Name_EN,r.Name_AR],owner:[r.Owner_EN,r.Owner_AR],pct:num(r.Percent),ms:[r.Milestone_EN,r.Milestone_AR],due:r.DueDate,st:stNorm(r.Status)})),
+    lic:  lic.map(r=>({d:[r.Doc_EN,r.Doc_AR],auth:r.Authority,no:r.Number,exp:r.Expiry,copy:bool(r.Copy),link:(r.FileLink||r.Link||'').trim()})),
+    fccAsOf: cf.ASOF||ASOF,
+    fccCountries: fcc.map(r=>({c:[r.Country_EN,r.Country_AR],st:r.Status,note:[r.Note_EN,r.Note_AR]})),
+    apAsOf: cf.ASOF||ASOF, apVendor:["Al Faresi","الفارسي"], apInvoices:apList,
+    apTotal: apList.reduce((s,r)=>s+r.amt,0), apCount: apList.length,
+    dec:  dec.map(r=>({q:[r.Q_EN,r.Q_AR],from:[r.From_EN,r.From_AR],raised:r.Raised,need:r.NeededBy,amt:num(r.Amount)})),
+  };
+}
+function showFcMonth(i){
+  const t=T[lang], L=lang==="ar"?1:0;
+  const p=(DATA.forecast||[])[i]; if(!p) return;
+  const items=p.items||[];
+  let html=`<div class="fcd-inner"><div class="fcd-head">${p.m[L]} — ${t.th_need} <b>${fmt(p.need)}</b></div><table class="reqtbl">`;
+  items.forEach(r=>{ html+=`<tr><td>${r.n[L]}</td><td class="num">${fmt(r.v)}</td></tr>`; });
+  html+=`<tr class="reqtot"><td>${t.total}</td><td class="num">${fmt(p.need)}</td></tr></table></div>`;
+  const c=document.getElementById('fcMonthDetail');
+  c.innerHTML=html; c.classList.add('open');
+}
+function toggleReq(){
+  const d=document.getElementById('reqDetail'), c=document.getElementById('reqChev');
+  if(!d) return;
+  const open=d.classList.toggle('open');
+  if(c) c.style.transform=open?'rotate(90deg)':'rotate(0deg)';
+}
+function setMode(m){const el=document.getElementById('mode'); if(!el) return;
+  el.textContent=m==='live'?'● Live data':'';
+  el.className='modebadge '+(m==='live'?'live':'sample');}
+
+async function init(){
+  DATA=SAMPLE; let mode='sample';
+  if(SHEET_ID){
+    try{ const live=await loadLive(SHEET_ID);
+      if(live.cash.length){ DATA=live; ASOF=live._asof; BURN=live._burn; today=pdate(ASOF); mode='live'; }
+    }catch(e){ console.warn('Live load failed — showing sample data.',e); }
+  }
+  setMode(mode); render();
+}
+init();
+</script>
